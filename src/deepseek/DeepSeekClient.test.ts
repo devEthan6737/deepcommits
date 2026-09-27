@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DeepCommitsSettingsEnum } from '../config/Config.types';
 
 const requestMock = vi.fn();
 
@@ -56,7 +57,7 @@ describe('DeepSeekClient', () => {
         const result = await client.generateCommitMessage({
             diff: 'diff --git a/file.ts b/file.ts',
             language: 'en',
-            commitConvention: 'conventional',
+            commitConvention: DeepCommitsSettingsEnum.Conventional,
             customInstructions: ''
         });
 
@@ -79,7 +80,7 @@ describe('DeepSeekClient', () => {
             client.generateCommitMessage({
                 diff: 'diff --git a/file.ts b/file.ts',
                 language: 'en',
-                commitConvention: 'conventional',
+                commitConvention: DeepCommitsSettingsEnum.Conventional,
                 customInstructions: ''
             })
         ).rejects.toThrow(/DeepSeek API request failed \(401\)/);

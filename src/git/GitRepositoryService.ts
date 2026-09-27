@@ -1,9 +1,7 @@
 import * as vscode from 'vscode';
 import { GitCommandRunner } from './GitCommandRunner';
+import { DefaultLogEntries, GitExtensionEnum } from './Git.constants';
 import type { GitApi, GitApiRepository, GitCommit } from './GitRepository.types';
-
-/** Default number of recent commits shown in the DeepCommits panel. */
-const DefaultLogEntries = 8;
 
 /**
  * Wraps the built-in `vscode.git` extension API to expose the pieces DeepCommits needs: picking
@@ -29,11 +27,9 @@ export class GitRepositoryService {
      * @throws {Error} When the built-in Git extension is not available.
      */
     public static async connect(): Promise<GitRepositoryService> {
-        const gitExtension = vscode.extensions.getExtension('vscode.git');
+        const gitExtension = vscode.extensions.getExtension(GitExtensionEnum.Id);
 
-        if (!gitExtension) {
-            throw new Error('The built-in Git extension is not available.');
-        }
+        if (!gitExtension) throw new Error('The built-in Git extension is not available.');
 
         const exports = gitExtension.isActive ? gitExtension.exports : await gitExtension.activate();
         return new GitRepositoryService(exports.getAPI(1) as GitApi, new GitCommandRunner());
@@ -47,16 +43,13 @@ export class GitRepositoryService {
      * @throws {Error} When no Git repository is open in the current workspace.
      */
     public pickRepository(): GitApiRepository {
-        if (this.gitApi.repositories.length === 0) {
-            throw new Error('No Git repository was found in the current workspace.');
-        }
+        if (this.gitApi.repositories.length === 0) throw new Error('No Git repository was found in the current workspace.');
 
         const activeUri = vscode.window.activeTextEditor?.document.uri;
         if (activeUri) {
             const match = this.gitApi.repositories.find((repo) => activeUri.fsPath.startsWith(repo.rootUri.fsPath));
-            if (match) {
-                return match;
-            }
+
+            if (match) return match;
         }
 
         return this.gitApi.repositories[0];
@@ -70,13 +63,8 @@ export class GitRepositoryService {
      * @returns {Promise<string>} A promise that resolves to the diff text, or an empty string if there are no changes.
      */
     public async getRelevantDiff(repository: GitApiRepository): Promise<string> {
-        if (repository.state.indexChanges.length > 0) {
-            return repository.diff(true);
-        }
-
-        if (repository.state.workingTreeChanges.length > 0) {
-            return repository.diff(false);
-        }
+        if (repository.state.indexChanges.length > 0) return repository.diff(true);
+        if (repository.state.workingTreeChanges.length > 0) return repository.diff(false);
 
         return '';
     }

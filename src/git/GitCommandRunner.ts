@@ -1,4 +1,5 @@
 import { execFile } from 'child_process';
+import { GitCliEnum } from './Git.constants';
 
 /**
  * Runs `git` commands directly via a child process, instead of going through the built-in
@@ -16,13 +17,18 @@ export class GitCommandRunner {
      */
     public commit(repositoryPath: string, message: string): Promise<void> {
         return new Promise((resolve, reject) => {
-            execFile('git', ['commit', '-m', message], { cwd: repositoryPath }, (error, _stdout, stderr) => {
-                if (error) {
-                    reject(new Error(stderr.trim() || error.message));
-                    return;
+            execFile(
+                GitCliEnum.Binary,
+                [GitCliEnum.CommitSubcommand, GitCliEnum.MessageFlag, message],
+                { cwd: repositoryPath },
+                (error, stdout, stderr) => {
+                    if (error) {
+                        reject(new Error(stderr.trim() || stdout.trim() || error.message));
+                        return;
+                    }
+                    resolve();
                 }
-                resolve();
-            });
+            );
         });
     }
 }

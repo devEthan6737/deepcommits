@@ -2,17 +2,20 @@ import * as https from 'https';
 import {
     DeepSeekApiHost,
     DeepSeekApiPath,
+    HttpMethodEnum,
     MaxCompletionTokens,
     MaxCustomInstructionsLength,
     MaxDiffLength,
     RequestTimeoutMs
 } from './DeepSeek.constants';
+import { DeepSeekRoleEnum } from './DeepSeek.types';
 import type {
     DeepSeekChatResponse,
     DeepSeekMessage,
     GenerateCommitMessageOptions,
     GenerateCommitMessageResult
 } from './DeepSeek.types';
+import { DeepCommitsSettingsEnum } from '../config/Config.types';
 
 /**
  * Client for the DeepSeek chat completions API, specialized in turning a git diff into a
@@ -72,7 +75,7 @@ export class DeepSeekClient {
      */
     private buildPrompt(options: GenerateCommitMessageOptions): DeepSeekMessage[] {
         const conventionInstructions =
-            options.commitConvention === 'conventional'
+            options.commitConvention === DeepCommitsSettingsEnum.Conventional
                 ? 'Use Conventional Commits (feat/fix/refactor/chore).'
                 : 'Plain summary, no required prefix.';
 
@@ -81,11 +84,11 @@ export class DeepSeekClient {
 
         return [
             {
-                role: 'system',
+                role: DeepSeekRoleEnum.System,
                 content: 'Senior engineer writing git commit messages. Output only the message, nothing else.'
             },
             {
-                role: 'user',
+                role: DeepSeekRoleEnum.User,
                 content:
                     `Language: ${options.language}. ${conventionInstructions} ` +
                     `First line under 72 chars, no body unless essential.${styleNote}\n\n` +
@@ -145,7 +148,7 @@ export class DeepSeekClient {
                 {
                     hostname: DeepSeekApiHost,
                     path: DeepSeekApiPath,
-                    method: 'POST',
+                    method: HttpMethodEnum.Post,
                     timeout: RequestTimeoutMs,
                     headers: {
                         'Content-Type': 'application/json',

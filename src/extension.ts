@@ -1,8 +1,16 @@
 import * as vscode from 'vscode';
-import { CommitPanel } from './CommitPanel';
-import { ConfigService } from './ConfigService';
-import { DeepSeekClient } from './DeepSeekClient';
-import { GitRepositoryService } from './GitRepositoryService';
+import { CommitPanel } from './panel/CommitPanel';
+import { ConfigService } from './config/ConfigService';
+import { DeepSeekClient } from './deepseek/DeepSeekClient';
+import { GitRepositoryService } from './git/GitRepositoryService';
+
+/** Identifiers of the commands DeepCommits contributes, as declared in `package.json`. */
+enum CommandEnum {
+    GenerateCommitMessage = 'deepcommits.generateCommitMessage',
+    ClearApiKey = 'deepcommits.clearApiKey',
+    OpenPanel = 'deepcommits.openPanel',
+    GenerateAndCommit = 'deepcommits.generateAndCommit'
+}
 
 /**
  * Activates the DeepCommits extension, registering its commands.
@@ -14,14 +22,14 @@ export function activate(context: vscode.ExtensionContext): void {
     const configService = new ConfigService(context);
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('deepcommits.generateCommitMessage', () =>
+        vscode.commands.registerCommand(CommandEnum.GenerateCommitMessage, () =>
             handleGenerateCommitMessage(configService)
         ),
-        vscode.commands.registerCommand('deepcommits.clearApiKey', () => handleClearApiKey(configService)),
-        vscode.commands.registerCommand('deepcommits.openPanel', () => {
+        vscode.commands.registerCommand(CommandEnum.ClearApiKey, () => handleClearApiKey(configService)),
+        vscode.commands.registerCommand(CommandEnum.OpenPanel, () => {
             CommitPanel.createOrShow(configService);
         }),
-        vscode.commands.registerCommand('deepcommits.generateAndCommit', () =>
+        vscode.commands.registerCommand(CommandEnum.GenerateAndCommit, () =>
             CommitPanel.createOrShow(configService).generateAndCommit()
         )
     );

@@ -1,3 +1,8 @@
+/** HTTP methods used when calling the DeepSeek API. */
+export enum HttpMethodEnum {
+    Post = 'POST'
+}
+
 /** Hostname of the DeepSeek API. */
 export const DeepSeekApiHost = 'api.deepseek.com';
 

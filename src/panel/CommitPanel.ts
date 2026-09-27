@@ -1,17 +1,46 @@
 import * as vscode from 'vscode';
-import { ConfigService } from './ConfigService';
-import { DeepSeekClient } from './DeepSeekClient';
-import { GitRepositoryService } from './GitRepositoryService';
-import type { GitApiRepository, GitCommit } from './GitRepository.types';
+import { ConfigService } from '../config/ConfigService';
+import { DeepSeekClient } from '../deepseek/DeepSeekClient';
+import { GitRepositoryService } from '../git/GitRepositoryService';
+import type { GitApiRepository, GitCommit } from '../git/GitRepository.types';
+import commitPanelHtml from './CommitPanel.html';
+
+enum InboundMessageEnum {
+    /** Request a new commit message from the diff. */
+    Generate = 'generate',
+    /** Commit staged changes using the provided message. */
+    Commit = 'commit',
+    /** Reload the panel's diff/commit data. */
+    Refresh = 'refresh'
+}
 
 /**
  * A message sent from the webview to the extension host.
- * @property {'generate'|'commit'|'refresh'} type - The action requested by the webview.
+ * @property {InboundMessageEnum} type - The action requested by the webview.
  * @property {string} message - The edited commit message, present for 'commit' actions.
  */
 interface InboundMessage {
-    type: 'generate' | 'commit' | 'refresh';
+    type: InboundMessageEnum;
     message?: string;
+}
+
+/** The kind of message posted from the extension host to the webview script. */
+enum OutboundMessageEnum {
+    /** A long-running action started or progressed. */
+    Status = 'status',
+    /** A commit message and its token usage were generated. */
+    Generated = 'generated',
+    /** The commit message was committed successfully. */
+    Committed = 'committed',
+    /** An action failed. */
+    Error = 'error',
+    /** Repository info and recent commit history were refreshed. */
+    Info = 'info'
+}
+
+/** Status values sent alongside an {@link OutboundMessageEnum.Status} message. */
+enum GenerationStatusEnum {
+    Generating = 'generating'
 }
 
 /** View identifier used for the DeepCommits webview panel. */
@@ -73,9 +102,8 @@ export class CommitPanel {
      */
     public async generateAndCommit(): Promise<void> {
         const message = await this.generate();
-        if (message) {
-            await this.commitMessage(message);
-        }
+
+        if (message) await this.commitMessage(message);
     }
 
     /**
@@ -86,13 +114,13 @@ export class CommitPanel {
      */
     private async handleMessage(message: InboundMessage): Promise<void> {
         switch (message.type) {
-            case 'generate':
+            case InboundMessageEnum.Generate:
                 await this.generate();
                 return;
-            case 'commit':
+            case InboundMessageEnum.Commit:
                 await this.commitMessage(message.message ?? '');
                 return;
-            case 'refresh':
+            case InboundMessageEnum.Refresh:
                 await this.refresh();
                 return;
         }
@@ -105,7 +133,7 @@ export class CommitPanel {
      * @returns {Promise<string | undefined>} A promise that resolves to the generated message, or undefined on failure.
      */
     private async generate(): Promise<string | undefined> {
-        this.post({ type: 'status', status: 'generating' });
+        this.post({ type: OutboundMessageEnum.Status, status: GenerationStatusEnum.Generating });
 
         try {
             const gitRepositoryService = await this.getGitRepositoryService();
@@ -113,13 +141,13 @@ export class CommitPanel {
             const diff = await gitRepositoryService.getRelevantDiff(repository);
 
             if (!diff.trim()) {
-                this.post({ type: 'error', message: 'No changes to commit were found.' });
+                this.post({ type: OutboundMessageEnum.Error, message: 'No changes to commit were found.' });
                 return undefined;
             }
 
             const apiKey = await this.configService.resolveApiKey();
             if (!apiKey) {
-                this.post({ type: 'error', message: 'A DeepSeek API key is required.' });
+                this.post({ type: OutboundMessageEnum.Error, message: 'A DeepSeek API key is required.' });
                 return undefined;
             }
 
@@ -132,10 +160,10 @@ export class CommitPanel {
                 diff
             });
 
-            this.post({ type: 'generated', message: result.message, usage: result.usage });
+            this.post({ type: OutboundMessageEnum.Generated, message: result.message, usage: result.usage });
             return result.message;
         } catch (error) {
-            this.post({ type: 'error', message: (error as Error).message });
+            this.post({ type: OutboundMessageEnum.Error, message: (error as Error).message });
             return undefined;
         }
     }
@@ -148,7 +176,7 @@ export class CommitPanel {
      */
     private async commitMessage(message: string): Promise<void> {
         if (!message.trim()) {
-            this.post({ type: 'error', message: 'The commit message is empty.' });
+            this.post({ type: OutboundMessageEnum.Error, message: 'The commit message is empty.' });
             return;
         }
 
@@ -156,10 +184,10 @@ export class CommitPanel {
             const gitRepositoryService = await this.getGitRepositoryService();
             const repository = gitRepositoryService.pickRepository();
             await gitRepositoryService.commit(repository, message);
-            this.post({ type: 'committed' });
+            this.post({ type: OutboundMessageEnum.Committed });
             await this.refresh();
         } catch (error) {
-            this.post({ type: 'error', message: (error as Error).message });
+            this.post({ type: OutboundMessageEnum.Error, message: (error as Error).message });
         }
     }
 
@@ -175,12 +203,12 @@ export class CommitPanel {
             const commits = await gitRepositoryService.getRecentCommits(repository);
 
             this.post({
-                type: 'info',
+                type: OutboundMessageEnum.Info,
                 repository: this.describeRepository(repository),
                 commits: commits.map((commit) => this.describeCommit(commit))
             });
         } catch (error) {
-            this.post({ type: 'error', message: (error as Error).message });
+            this.post({ type: OutboundMessageEnum.Error, message: (error as Error).message });
         }
     }
 
@@ -257,271 +285,6 @@ export class CommitPanel {
     private getHtml(): string {
         const nonce = String(Date.now());
 
-        return /* html */ `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';" />
-    <title>DeepCommits</title>
-    <style>
-        :root {
-            color-scheme: light dark;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--vscode-font-family);
-            font-size: var(--vscode-font-size);
-            color: var(--vscode-editor-foreground);
-            background-color: var(--vscode-editor-background);
-            padding: 20px;
-            margin: 0;
-        }
-
-        .card {
-            background-color: var(--vscode-sideBar-background, var(--vscode-editor-background));
-            border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border));
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-
-        .card h2 {
-            margin: 0 0 12px 0;
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: var(--vscode-descriptionForeground);
-        }
-
-        .repo-info {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px 20px;
-            font-size: 13px;
-        }
-
-        .repo-info span b {
-            color: var(--vscode-foreground);
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 110px;
-            resize: vertical;
-            font-family: var(--vscode-editor-font-family, var(--vscode-font-family));
-            font-size: 13px;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--vscode-input-border, var(--vscode-widget-border));
-            background-color: var(--vscode-input-background);
-            color: var(--vscode-input-foreground);
-        }
-
-        textarea:focus {
-            outline: 1px solid var(--vscode-focusBorder);
-        }
-
-        .usage-line {
-            margin-top: 8px;
-            font-size: 11px;
-            color: var(--vscode-descriptionForeground);
-            min-height: 16px;
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        button {
-            border: none;
-            border-radius: 6px;
-            padding: 6px 14px;
-            font-size: 13px;
-            cursor: pointer;
-            background-color: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
-            color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
-        }
-
-        button.primary {
-            background-color: var(--vscode-button-background);
-            color: var(--vscode-button-foreground);
-        }
-
-        button:hover {
-            background-color: var(--vscode-button-hoverBackground);
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: default;
-        }
-
-        .error {
-            color: var(--vscode-errorForeground);
-            font-size: 12px;
-            margin-top: 8px;
-            min-height: 16px;
-        }
-
-        ul.commits {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        ul.commits li {
-            display: flex;
-            gap: 10px;
-            align-items: baseline;
-            font-size: 12px;
-            border-bottom: 1px solid var(--vscode-widget-border, transparent);
-            padding-bottom: 8px;
-        }
-
-        ul.commits li:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .commit-hash {
-            font-family: var(--vscode-editor-font-family, monospace);
-            color: var(--vscode-textLink-foreground);
-        }
-
-        .commit-meta {
-            color: var(--vscode-descriptionForeground);
-        }
-
-        .empty {
-            color: var(--vscode-descriptionForeground);
-            font-size: 12px;
-        }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>Repository</h2>
-        <div class="repo-info" id="repo-info">
-            <span class="empty">Loading...</span>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Commit message</h2>
-        <textarea id="message" placeholder="Click Generate to draft a commit message from your staged diff..."></textarea>
-        <div class="usage-line" id="usage"></div>
-        <div class="error" id="error"></div>
-        <div class="actions">
-            <button class="primary" id="generate">Generate</button>
-            <button id="commit">Commit</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Recent commits</h2>
-        <ul class="commits" id="commits">
-            <li class="empty">Loading...</li>
-        </ul>
-    </div>
-
-    <script nonce="${nonce}">
-        const vscode = acquireVsCodeApi();
-        const messageBox = document.getElementById('message');
-        const usageLine = document.getElementById('usage');
-        const errorLine = document.getElementById('error');
-        const generateButton = document.getElementById('generate');
-        const commitButton = document.getElementById('commit');
-        const repoInfo = document.getElementById('repo-info');
-        const commitsList = document.getElementById('commits');
-
-        function setBusy(busy) {
-            generateButton.disabled = busy;
-            commitButton.disabled = busy;
-        }
-
-        generateButton.addEventListener('click', () => {
-            errorLine.textContent = '';
-            setBusy(true);
-            vscode.postMessage({ type: 'generate' });
-        });
-
-        commitButton.addEventListener('click', () => {
-            errorLine.textContent = '';
-            setBusy(true);
-            vscode.postMessage({ type: 'commit', message: messageBox.value });
-        });
-
-        window.addEventListener('message', (event) => {
-            const data = event.data;
-
-            switch (data.type) {
-                case 'status':
-                    if (data.status === 'generating') {
-                        usageLine.textContent = 'Generating...';
-                    }
-                    return;
-                case 'generated':
-                    messageBox.value = data.message;
-                    usageLine.textContent =
-                        data.usage.totalTokens +
-                        ' tokens (' +
-                        data.usage.promptTokens +
-                        ' prompt + ' +
-                        data.usage.completionTokens +
-                        ' completion)';
-                    setBusy(false);
-                    return;
-                case 'committed':
-                    messageBox.value = '';
-                    usageLine.textContent = '';
-                    setBusy(false);
-                    return;
-                case 'error':
-                    errorLine.textContent = data.message;
-                    setBusy(false);
-                    return;
-                case 'info':
-                    repoInfo.innerHTML =
-                        '<span><b>' + data.repository.name + '</b></span>' +
-                        '<span>branch: <b>' + data.repository.branch + '</b></span>' +
-                        '<span>staged: <b>' + data.repository.stagedCount + '</b></span>' +
-                        '<span>changed: <b>' + data.repository.changedCount + '</b></span>';
-
-                    if (data.commits.length === 0) {
-                        commitsList.innerHTML = '<li class="empty">No commits yet.</li>';
-                        return;
-                    }
-
-                    commitsList.innerHTML = data.commits
-                        .map(
-                            (commit) =>
-                                '<li><span class="commit-hash">' +
-                                commit.hash +
-                                '</span><span>' +
-                                commit.message +
-                                '</span><span class="commit-meta">' +
-                                commit.authorName +
-                                (commit.date ? ' &middot; ' + commit.date : '') +
-                                '</span></li>'
-                        )
-                        .join('');
-                    return;
-            }
-        });
-
-        vscode.postMessage({ type: 'refresh' });
-    </script>
-</body>
-</html>`;
+        return commitPanelHtml.split('__NONCE__').join(nonce);
     }
 }

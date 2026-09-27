@@ -1,3 +1,5 @@
+import { DeepCommitsSettingsEnum } from './Config.types';
+
 /** Root section name for DeepCommits settings in `settings.json`. */
 export const ConfigSection = 'deepcommits';
 
@@ -11,7 +13,7 @@ export const DefaultModel = 'deepseek-chat';
 export const DefaultLanguage = 'en';
 
 /** Default commit message convention. */
-export const DefaultCommitConvention = 'conventional';
+export const DefaultCommitConvention = DeepCommitsSettingsEnum.Conventional;
 
 /** Default custom instructions for the AI (none). */
 export const DefaultCustomInstructions = '';

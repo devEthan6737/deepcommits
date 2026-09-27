@@ -2,11 +2,27 @@
 
 Todos los cambios notables de este proyecto se documentan en este archivo.
 
+## [0.1.2]
+
+### Fixed
+
+- El error al commitear ya no muestra el mensaje genérico `Command failed: ...` cuando `git` reporta el motivo del fallo (p. ej. "nada para confirmar") por `stdout` en lugar de `stderr`.
+
+### Changed
+
+- Reorganizado `src/` en carpetas por dominio (`config/`, `deepseek/`, `git/`, `panel/`).
+- Extraído el HTML/CSS/JS del panel Webview a `src/panel/CommitPanel.html`, bundleado por webpack como `asset/source`.
+- Sustituidos los strings mágicos por `enum` (IDs de comandos, claves de configuración, roles de mensaje de DeepSeek, mensajes del webview, subcomandos de `git`, entre otros) para mayor seguridad de tipos.
+
 ## [0.1.1]
 
 ### Fixed
 
 - El commit desde el panel ahora se ejecuta con `git commit` vía `child_process`, en lugar de depender de la API interna de la extensión Git integrada de VS Code, que podía fallar por configuración de `git.path`.
+
+### Changed
+
+- Renombrado el publisher de la extensión a `etherener`.
 
 ## [0.1.0]
 

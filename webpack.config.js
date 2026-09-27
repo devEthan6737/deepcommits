@@ -30,6 +30,10 @@ const config = {
                         loader: 'ts-loader'
                     }
                 ]
+            },
+            {
+                test: /\.html$/,
+                type: 'asset/source'
             }
         ]
     },

@@ -1,10 +1,19 @@
+import type { DeepCommitsSettingsEnum } from '../config/Config.types';
+
+/** The role of a message author in the DeepSeek chat completions API. */
+export enum DeepSeekRoleEnum {
+    System = 'system',
+    User = 'user',
+    Assistant = 'assistant'
+}
+
 /**
  * A single message exchanged with the DeepSeek chat completions API.
- * @property {'system'|'user'|'assistant'} role - The role of the message author.
+ * @property {DeepSeekRoleEnum} role - The role of the message author.
  * @property {string} content - The text content of the message.
  */
 export interface DeepSeekMessage {
-    role: 'system' | 'user' | 'assistant';
+    role: DeepSeekRoleEnum;
     content: string;
 }
 
@@ -12,13 +21,13 @@ export interface DeepSeekMessage {
  * Options required to generate a commit message from a staged diff.
  * @property {string} diff - The staged git diff to summarize into a commit message.
  * @property {string} language - The language the commit message should be written in.
- * @property {'conventional'|'freeform'} commitConvention - Whether to enforce Conventional Commits formatting.
+ * @property {DeepCommitsSettingsEnum} commitConvention - Whether to enforce Conventional Commits formatting.
  * @property {string} customInstructions - Extra user-provided style instructions for the AI, if any.
  */
 export interface GenerateCommitMessageOptions {
     diff: string;
     language: string;
-    commitConvention: 'conventional' | 'freeform';
+    commitConvention: DeepCommitsSettingsEnum;
     customInstructions: string;
 }
 

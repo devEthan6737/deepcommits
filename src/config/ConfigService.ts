@@ -7,7 +7,8 @@ import {
     DefaultModel,
     SecretKey
 } from './Config.constants';
-import type { DeepCommitsSettings } from './Config.types';
+import { ConfigKeyEnum } from './Config.types';
+import type { DeepCommitsSettings, DeepCommitsSettingsEnum } from './Config.types';
 
 /**
  * Reads DeepCommits settings and resolves the DeepSeek API key, storing it securely in VS Code's
@@ -31,10 +32,10 @@ export class ConfigService {
     public getSettings(): DeepCommitsSettings {
         const config = this.getConfiguration();
         return {
-            model: config.get<string>('model', DefaultModel),
-            language: config.get<string>('language', DefaultLanguage),
-            commitConvention: config.get<'conventional' | 'freeform'>('commitConvention', DefaultCommitConvention),
-            customInstructions: config.get<string>('customInstructions', DefaultCustomInstructions)
+            model: config.get<string>(ConfigKeyEnum.Model, DefaultModel),
+            language: config.get<string>(ConfigKeyEnum.Language, DefaultLanguage),
+            commitConvention: config.get<DeepCommitsSettingsEnum>(ConfigKeyEnum.CommitConvention, DefaultCommitConvention),
+            customInstructions: config.get<string>(ConfigKeyEnum.CustomInstructions, DefaultCustomInstructions)
         };
     }
 
@@ -46,7 +47,7 @@ export class ConfigService {
      * @returns {Promise<string | undefined>} A promise that resolves to the API key, or undefined if the user cancels.
      */
     public async resolveApiKey(): Promise<string | undefined> {
-        const settingsKey = this.getConfiguration().get<string>('apiKey', '').trim();
+        const settingsKey = this.getConfiguration().get<string>(ConfigKeyEnum.ApiKey, '').trim();
         if (settingsKey) {
             return settingsKey;
         }

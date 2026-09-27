@@ -4,51 +4,53 @@ Genera mensajes de commit de Git a partir de tus cambios en staging, usando la A
 
 ## Uso
 
-### Flujo rápido (barra de Source Control)
+### Desde Source Control
 
-1. Haz `git add` de los cambios que quieras commitear.
-2. Abre el panel de **Source Control** en VS Code.
-3. Pulsa el botón **DeepCommits: Generate Commit Message** (icono de chispa) en la barra de título del SCM.
-4. El mensaje generado se coloca en el cuadro de commit; revísalo y edítalo antes de confirmar tú mismo.
-
-Si no hay cambios en staging, se usa el diff del working tree.
+1. Haz `git add` de los cambios que quieras commitear (si no hay nada en staging, se usa el diff del working tree).
+2. En el panel **Source Control**, pulsa el botón de chispa **DeepCommits: Generate Commit Message**.
+3. El mensaje generado se coloca en el cuadro de commit. Revísalo, edítalo si hace falta, y confirma tú mismo.
 
 ### Panel DeepCommits
 
-Ejecuta **DeepCommits: Open Panel** desde la paleta de comandos (`Ctrl+Shift+P`) o el icono de chispa en el SCM para abrir un panel lateral que:
+**DeepCommits: Open Panel** (paleta de comandos o icono de chispa) abre un panel lateral con:
 
-- Respeta automáticamente los colores del tema activo de VS Code.
-- Muestra info del repo (nombre, rama, archivos en staging/modificados).
-- Genera y permite editar el mensaje antes de comitear, mostrando debajo los **tokens consumidos** (prompt + completion + total), igual que en la app de Claude.
-- Lista los commits recientes del repositorio.
-- Tiene sus propios botones **Generate** y **Commit**.
+- Info del repo activo: nombre, rama, archivos en staging/modificados.
+- Un cuadro de mensaje editable, con los tokens consumidos (prompt + completion + total) tras cada generación.
+- Historial de commits recientes.
+- Botones propios **Generate** y **Commit**.
 
-### Atajo de teclado: generar y commitear al instante
+### Generar y commitear al instante
 
-`Ctrl+Alt+M` (`Cmd+Alt+M` en macOS) abre el panel, genera el mensaje a partir del diff en staging y **commitea inmediatamente**, sin pasos intermedios. Útil para el flujo rápido de "ya revisé mi diff, solo commitea".
+`Ctrl+Alt+M` (`Cmd+Alt+M` en macOS) genera el mensaje desde el diff en staging y commitea de inmediato, sin pasos intermedios.
 
-Para resetear la API key guardada, ejecuta el comando **DeepCommits: Clear Stored API Key** desde la paleta de comandos.
+Para olvidar la API key guardada: **DeepCommits: Clear Stored API Key**.
+
+## Comandos
+
+| Comando | Qué hace |
+| --- | --- |
+| `DeepCommits: Generate Commit Message` | Genera un mensaje a partir del diff en staging y lo coloca en el cuadro de commit del panel Source Control. |
+| `DeepCommits: Open Panel` | Abre el panel lateral de DeepCommits. |
+| `DeepCommits: Generate and Commit Instantly` | Genera el mensaje y commitea de inmediato (atajo `Ctrl+Alt+M` / `Cmd+Alt+M`). |
+| `DeepCommits: Clear Stored API Key` | Borra la API key guardada en el secret storage. |
 
 ## Configuración
 
 | Setting | Descripción | Default |
 | --- | --- | --- |
-| `deepcommits.apiKey` | API key de DeepSeek. Si se deja vacía, la extensión la pide una vez y la guarda de forma segura en el secret storage de VS Code. | `""` |
+| `deepcommits.apiKey` | API key de DeepSeek. Si se deja vacía, se pide una vez y se guarda en el secret storage de VS Code. | `""` |
 | `deepcommits.model` | Modelo de DeepSeek a usar. | `deepseek-chat` |
 | `deepcommits.language` | Idioma del mensaje generado. | `en` |
-| `deepcommits.commitConvention` | `conventional` para forzar el formato de Conventional Commits, o `freeform`. | `conventional` |
-| `deepcommits.customInstructions` | Instrucciones de estilo propias para la IA (p. ej. "menciona siempre el módulo afectado entre paréntesis"), aplicadas junto a `commitConvention`. Se recorta a 200 caracteres. | `""` |
+| `deepcommits.commitConvention` | `conventional` para forzar Conventional Commits, o `freeform`. | `conventional` |
+| `deepcommits.customInstructions` | Instrucciones de estilo propias para la IA, aplicadas junto a `commitConvention`. Se recorta a 200 caracteres. | `""` |
 
 ## Consumo de tokens
 
-DeepCommits está optimizado para que cada generación consuma **poco menos de 900 tokens como máximo** (siendo permisivos):
+Cada generación apunta a un tope de ~900 tokens:
 
-- El diff enviado se recorta a 2000 caracteres (~500-600 tokens en el peor caso).
-- El prompt del sistema y las instrucciones son deliberadamente cortos.
-- Las instrucciones personalizadas se limitan a 200 caracteres.
-- La respuesta del modelo está limitada a 120 tokens (`max_tokens`), suficiente para un mensaje de commit con cuerpo corto.
-
-Si tu diff es enorme, el mensaje se genera igual, pero solo a partir de los primeros ~2000 caracteres del diff (se añade una nota `[diff truncated for length]`).
+- El diff se recorta a 2000 caracteres antes de enviarse (si excede el límite, se añade `[diff truncated for length]`).
+- Prompt de sistema corto, instrucciones personalizadas limitadas a 200 caracteres.
+- Respuesta del modelo limitada a 120 tokens (`max_tokens`).
 
 ## Desarrollo
 
@@ -57,24 +59,16 @@ pnpm install
 pnpm run watch
 ```
 
-Presiona `F5` en VS Code para lanzar una ventana de Extension Development Host con la extensión cargada.
+`F5` en VS Code lanza un Extension Development Host con la extensión cargada.
 
-### Comandos
-
-- `pnpm run compile`: compila con webpack.
-- `pnpm run typecheck`: verifica tipos con `tsc --noEmit`.
-- `pnpm run lint`: corre ESLint sobre `src/`.
-- `pnpm run test`: corre los tests unitarios con Vitest.
-- `pnpm run package`: build de producción con webpack.
-- `pnpm run package:vsix`: genera el `.vsix` instalable con `vsce`.
-
-## Arquitectura
-
-- `DeepSeekClient`: cliente de la API de DeepSeek, construye el prompt (incluyendo instrucciones personalizadas) y llama al endpoint de chat completions, devolviendo el mensaje y el uso de tokens.
-- `ConfigService`: lee la configuración de VS Code y resuelve/guarda la API key en el secret storage.
-- `GitRepositoryService`: envuelve la API del `vscode.git` para elegir el repositorio activo, leer su diff, commitear y leer su historial.
-- `CommitPanel`: panel Webview (estilo Notion, respeta el tema) que orquesta generación, edición, commit e historial.
-- `extension.ts`: registra los comandos y orquesta las clases anteriores.
+| Comando | Qué hace |
+| --- | --- |
+| `pnpm run compile` | Build con webpack. |
+| `pnpm run typecheck` | Verifica tipos con `tsc --noEmit`. |
+| `pnpm run lint` | ESLint sobre `src/`. |
+| `pnpm run test` | Tests unitarios con Vitest. |
+| `pnpm run package` | Build de producción con webpack. |
+| `pnpm run package:vsix` | Genera el `.vsix` instalable con `vsce`. |
 
 Convenciones de código en [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 

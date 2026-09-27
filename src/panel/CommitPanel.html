@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-__NONCE__';" />
+    <title>DeepCommits</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--vscode-font-family);
+            font-size: var(--vscode-font-size);
+            color: var(--vscode-editor-foreground);
+            background-color: var(--vscode-editor-background);
+            padding: 20px;
+            margin: 0;
+        }
+
+        .card {
+            background-color: var(--vscode-sideBar-background, var(--vscode-editor-background));
+            border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border));
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card h2 {
+            margin: 0 0 12px 0;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .repo-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 20px;
+            font-size: 13px;
+        }
+
+        .repo-info span b {
+            color: var(--vscode-foreground);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 110px;
+            resize: vertical;
+            font-family: var(--vscode-editor-font-family, var(--vscode-font-family));
+            font-size: 13px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--vscode-input-border, var(--vscode-widget-border));
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+        }
+
+        textarea:focus {
+            outline: 1px solid var(--vscode-focusBorder);
+        }
+
+        .usage-line {
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--vscode-descriptionForeground);
+            min-height: 16px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        button {
+            border: none;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            background-color: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
+            color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
+        }
+
+        button.primary {
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+
+        button:hover {
+            background-color: var(--vscode-button-hoverBackground);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .error {
+            color: var(--vscode-errorForeground);
+            font-size: 12px;
+            margin-top: 8px;
+            min-height: 16px;
+        }
+
+        ul.commits {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        ul.commits li {
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+            font-size: 12px;
+            border-bottom: 1px solid var(--vscode-widget-border, transparent);
+            padding-bottom: 8px;
+        }
+
+        ul.commits li:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .commit-hash {
+            font-family: var(--vscode-editor-font-family, monospace);
+            color: var(--vscode-textLink-foreground);
+        }
+
+        .commit-meta {
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .empty {
+            color: var(--vscode-descriptionForeground);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Repository</h2>
+        <div class="repo-info" id="repo-info">
+            <span class="empty">Loading...</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Commit message</h2>
+        <textarea id="message" placeholder="Click Generate to draft a commit message from your staged diff..."></textarea>
+        <div class="usage-line" id="usage"></div>
+        <div class="error" id="error"></div>
+        <div class="actions">
+            <button class="primary" id="generate">Generate</button>
+            <button id="commit">Commit</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Recent commits</h2>
+        <ul class="commits" id="commits">
+            <li class="empty">Loading...</li>
+        </ul>
+    </div>
+
+    <script nonce="__NONCE__">
+        const vscode = acquireVsCodeApi();
+        const messageBox = document.getElementById('message');
+        const usageLine = document.getElementById('usage');
+        const errorLine = document.getElementById('error');
+        const generateButton = document.getElementById('generate');
+        const commitButton = document.getElementById('commit');
+        const repoInfo = document.getElementById('repo-info');
+        const commitsList = document.getElementById('commits');
+
+        function setBusy(busy) {
+            generateButton.disabled = busy;
+            commitButton.disabled = busy;
+        }
+
+        generateButton.addEventListener('click', () => {
+            errorLine.textContent = '';
+            setBusy(true);
+            vscode.postMessage({ type: 'generate' });
+        });
+
+        commitButton.addEventListener('click', () => {
+            errorLine.textContent = '';
+            setBusy(true);
+            vscode.postMessage({ type: 'commit', message: messageBox.value });
+        });
+
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+
+            switch (data.type) {
+                case 'status':
+                    if (data.status === 'generating') {
+                        usageLine.textContent = 'Generating...';
+                    }
+                    return;
+                case 'generated':
+                    messageBox.value = data.message;
+                    usageLine.textContent =
+                        data.usage.totalTokens +
+                        ' tokens (' +
+                        data.usage.promptTokens +
+                        ' prompt + ' +
+                        data.usage.completionTokens +
+                        ' completion)';
+                    setBusy(false);
+                    return;
+                case 'committed':
+                    messageBox.value = '';
+                    usageLine.textContent = '';
+                    setBusy(false);
+                    return;
+                case 'error':
+                    errorLine.textContent = data.message;
+                    setBusy(false);
+                    return;
+                case 'info':
+                    repoInfo.innerHTML =
+                        '<span><b>' + data.repository.name + '</b></span>' +
+                        '<span>branch: <b>' + data.repository.branch + '</b></span>' +
+                        '<span>staged: <b>' + data.repository.stagedCount + '</b></span>' +
+                        '<span>changed: <b>' + data.repository.changedCount + '</b></span>';
+
+                    if (data.commits.length === 0) {
+                        commitsList.innerHTML = '<li class="empty">No commits yet.</li>';
+                        return;
+                    }
+
+                    commitsList.innerHTML = data.commits
+                        .map(
+                            (commit) =>
+                                '<li><span class="commit-hash">' +
+                                commit.hash +
+                                '</span><span>' +
+                                commit.message +
+                                '</span><span class="commit-meta">' +
+                                commit.authorName +
+                                (commit.date ? ' &middot; ' + commit.date : '') +
+                                '</span></li>'
+                        )
+                        .join('');
+                    return;
+            }
+        });
+
+        vscode.postMessage({ type: 'refresh' });
+    </script>
+</body>
+</html>
