@@ -11,6 +11,8 @@ Genera mensajes de commit de Git a partir de tus cambios en staging, usando la A
 
 Si no hay cambios en staging, se usa el diff del working tree.
 
+Para resetear la API key guardada, ejecuta el comando **DeepCommits: Clear Stored API Key** desde la paleta de comandos (`Ctrl+Shift+P`).
+
 ## Configuración
 
 | Setting | Descripción | Default |
@@ -34,4 +36,19 @@ Presiona `F5` en VS Code para lanzar una ventana de Extension Development Host c
 - `pnpm run compile`: compila con webpack.
 - `pnpm run typecheck`: verifica tipos con `tsc --noEmit`.
 - `pnpm run lint`: corre ESLint sobre `src/`.
-- `pnpm run package`: build de producción para empaquetar con `vsce`.
+- `pnpm run test`: corre los tests unitarios con Vitest.
+- `pnpm run package`: build de producción con webpack.
+- `pnpm run package:vsix`: genera el `.vsix` instalable con `vsce`.
+
+## Arquitectura
+
+- `DeepSeekClient`: cliente de la API de DeepSeek, construye el prompt y llama al endpoint de chat completions.
+- `ConfigService`: lee la configuración de VS Code y resuelve/guarda la API key en el secret storage.
+- `GitRepositoryService`: envuelve la API del `vscode.git` para elegir el repositorio activo y leer su diff.
+- `extension.ts`: registra los comandos y orquesta las clases anteriores.
+
+Convenciones de código en [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
+## CI
+
+Cada push/PR a `main` corre `typecheck`, `lint`, `test` y `compile` vía GitHub Actions (`.github/workflows/ci.yml`).
