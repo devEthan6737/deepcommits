@@ -1,93 +1,93 @@
 {
-  "name": "deepcommits",
-  "displayName": "DeepCommits",
-  "description": "Generate Git commit messages from your staged changes using the DeepSeek API.",
-  "version": "0.1.0",
-  "publisher": "devethan6737",
-  "engines": {
-    "vscode": "^1.85.0"
-  },
-  "categories": [
-    "SCM Providers",
-    "Other"
-  ],
-  "keywords": [
-    "git",
-    "commit",
-    "deepseek",
-    "ai"
-  ],
-  "activationEvents": [],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "deepcommits.generateCommitMessage",
-        "title": "DeepCommits: Generate Commit Message",
-        "icon": "$(sparkle)"
-      }
-    ],
-    "menus": {
-      "scm/title": [
-        {
-          "command": "deepcommits.generateCommitMessage",
-          "when": "scmProvider == git",
-          "group": "navigation"
-        }
-      ]
+    "name": "deepcommits",
+    "displayName": "DeepCommits",
+    "description": "Generate Git commit messages from your staged changes using the DeepSeek API.",
+    "version": "0.1.0",
+    "publisher": "devethan6737",
+    "engines": {
+        "vscode": "^1.85.0"
     },
-    "configuration": {
-      "title": "DeepCommits",
-      "properties": {
-        "deepcommits.apiKey": {
-          "type": "string",
-          "default": "",
-          "description": "DeepSeek API key. If empty, DeepCommits will prompt for it and store it securely."
+    "categories": [
+        "SCM Providers",
+        "Other"
+    ],
+    "keywords": [
+        "git",
+        "commit",
+        "deepseek",
+        "ai"
+    ],
+    "activationEvents": [],
+    "main": "./dist/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "deepcommits.generateCommitMessage",
+                "title": "DeepCommits: Generate Commit Message",
+                "icon": "$(sparkle)"
+            }
+        ],
+        "menus": {
+            "scm/title": [
+                {
+                    "command": "deepcommits.generateCommitMessage",
+                    "when": "scmProvider == git",
+                    "group": "navigation"
+                }
+            ]
         },
-        "deepcommits.model": {
-          "type": "string",
-          "default": "deepseek-chat",
-          "description": "DeepSeek model used to generate commit messages."
-        },
-        "deepcommits.language": {
-          "type": "string",
-          "default": "en",
-          "description": "Language for the generated commit message (e.g. 'en', 'es')."
-        },
-        "deepcommits.commitConvention": {
-          "type": "string",
-          "enum": [
-            "conventional",
-            "freeform"
-          ],
-          "default": "conventional",
-          "description": "Whether to enforce Conventional Commits format."
+        "configuration": {
+            "title": "DeepCommits",
+            "properties": {
+                "deepcommits.apiKey": {
+                    "type": "string",
+                    "default": "",
+                    "description": "DeepSeek API key. If empty, DeepCommits will prompt for it and store it securely."
+                },
+                "deepcommits.model": {
+                    "type": "string",
+                    "default": "deepseek-chat",
+                    "description": "DeepSeek model used to generate commit messages."
+                },
+                "deepcommits.language": {
+                    "type": "string",
+                    "default": "en",
+                    "description": "Language for the generated commit message (e.g. 'en', 'es')."
+                },
+                "deepcommits.commitConvention": {
+                    "type": "string",
+                    "enum": [
+                        "conventional",
+                        "freeform"
+                    ],
+                    "default": "conventional",
+                    "description": "Whether to enforce Conventional Commits format."
+                }
+            }
         }
-      }
-    }
-  },
-  "scripts": {
-    "vscode:prepublish": "pnpm run package",
-    "compile": "webpack",
-    "watch": "webpack --watch",
-    "package": "webpack --mode production --devtool hidden-source-map",
-    "lint": "eslint src --ext ts",
-    "typecheck": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.0",
-    "@types/vscode": "^1.85.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "eslint": "^8.56.0",
-    "ts-loader": "^9.5.1",
-    "typescript": "^5.3.3",
-    "webpack": "^5.90.0",
-    "webpack-cli": "^5.1.4"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/devethan6737/deepcommits.git"
-  },
-  "license": "MIT"
+    },
+    "scripts": {
+        "vscode:prepublish": "pnpm run package",
+        "compile": "webpack",
+        "watch": "webpack --watch",
+        "package": "webpack --mode production --devtool hidden-source-map",
+        "lint": "eslint src --ext ts",
+        "typecheck": "tsc --noEmit"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.0",
+        "@types/vscode": "^1.85.0",
+        "@typescript-eslint/eslint-plugin": "^7.0.0",
+        "@typescript-eslint/parser": "^7.0.0",
+        "eslint": "^8.56.0",
+        "ts-loader": "^9.5.1",
+        "typescript": "^5.3.3",
+        "webpack": "^5.90.0",
+        "webpack-cli": "^5.1.4"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/devEthan6737/deepcommits.git"
+    },
+    "license": "MIT"
 }

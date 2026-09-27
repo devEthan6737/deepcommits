@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
-const CONFIG_SECTION = 'deepcommits';
-const SECRET_KEY = 'deepcommits.apiKey';
+const ConfigSection = 'deepcommits';
+const SecretKey = 'deepcommits.apiKey';
 
 /**
  * Resolved DeepCommits settings used to generate a commit message.
@@ -10,9 +10,9 @@ const SECRET_KEY = 'deepcommits.apiKey';
  * @property {'conventional'|'freeform'} commitConvention - Whether to enforce Conventional Commits formatting.
  */
 export interface DeepCommitsSettings {
-  model: string;
-  language: string;
-  commitConvention: 'conventional' | 'freeform';
+    model: string;
+    language: string;
+    commitConvention: 'conventional' | 'freeform';
 }
 
 /**
@@ -21,12 +21,12 @@ export interface DeepCommitsSettings {
  * @returns {DeepCommitsSettings} The resolved model, language, and commit convention settings.
  */
 export function getSettings(): DeepCommitsSettings {
-  const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
-  return {
-    model: config.get<string>('model', 'deepseek-chat'),
-    language: config.get<string>('language', 'en'),
-    commitConvention: config.get<'conventional' | 'freeform'>('commitConvention', 'conventional')
-  };
+    const config = vscode.workspace.getConfiguration(ConfigSection);
+    return {
+        model: config.get<string>('model', 'deepseek-chat'),
+        language: config.get<string>('language', 'en'),
+        commitConvention: config.get<'conventional' | 'freeform'>('commitConvention', 'conventional')
+    };
 }
 
 /**
@@ -38,28 +38,28 @@ export function getSettings(): DeepCommitsSettings {
  * @returns {Promise<string | undefined>} A promise that resolves to the API key, or undefined if the user cancels.
  */
 export async function resolveApiKey(context: vscode.ExtensionContext): Promise<string | undefined> {
-  const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
-  const settingsKey = config.get<string>('apiKey', '').trim();
-  if (settingsKey) {
-    return settingsKey;
-  }
+    const config = vscode.workspace.getConfiguration(ConfigSection);
+    const settingsKey = config.get<string>('apiKey', '').trim();
+    if (settingsKey) {
+        return settingsKey;
+    }
 
-  const storedKey = await context.secrets.get(SECRET_KEY);
-  if (storedKey) {
-    return storedKey;
-  }
+    const storedKey = await context.secrets.get(SecretKey);
+    if (storedKey) {
+        return storedKey;
+    }
 
-  const enteredKey = await vscode.window.showInputBox({
-    title: 'DeepCommits: DeepSeek API Key',
-    prompt: 'Enter your DeepSeek API key. It will be stored securely for future use.',
-    password: true,
-    ignoreFocusOut: true
-  });
+    const enteredKey = await vscode.window.showInputBox({
+        title: 'DeepCommits: DeepSeek API Key',
+        prompt: 'Enter your DeepSeek API key. It will be stored securely for future use.',
+        password: true,
+        ignoreFocusOut: true
+    });
 
-  if (!enteredKey) {
-    return undefined;
-  }
+    if (!enteredKey) {
+        return undefined;
+    }
 
-  await context.secrets.store(SECRET_KEY, enteredKey.trim());
-  return enteredKey.trim();
+    await context.secrets.store(SecretKey, enteredKey.trim());
+    return enteredKey.trim();
 }
