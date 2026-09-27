@@ -21,7 +21,6 @@ export interface GitCommit {
  * @property {Object} state - The current repository state.
  * @property {Object} inputBox - The Source Control input box for this repository.
  * @property {(cached?: boolean) => Promise<string>} diff - Returns the diff for staged (cached) or working tree changes.
- * @property {(message: string) => Promise<void>} commit - Commits the currently staged changes.
  * @property {(options?: { maxEntries?: number }) => Promise<GitCommit[]>} log - Returns recent commits.
  */
 export interface GitApiRepository {
@@ -37,7 +36,6 @@ export interface GitApiRepository {
         value: string;
     };
     diff(cached?: boolean): Promise<string>;
-    commit(message: string): Promise<void>;
     log(options?: { maxEntries?: number }): Promise<GitCommit[]>;
 }
 

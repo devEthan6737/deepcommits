@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { GitCommandRunner } from './GitCommandRunner';
 import type { GitApi, GitApiRepository, GitCommit } from './GitRepository.types';
 
 /** Default number of recent commits shown in the DeepCommits panel. */
@@ -10,12 +11,15 @@ const DefaultLogEntries = 8;
  */
 export class GitRepositoryService {
     private readonly gitApi: GitApi;
+    private readonly commandRunner: GitCommandRunner;
 
     /**
      * @param {GitApi} gitApi - The resolved `vscode.git` extension API.
+     * @param {GitCommandRunner} commandRunner - Runs `git` commands directly for operations the API can't be trusted for.
      */
-    private constructor(gitApi: GitApi) {
+    private constructor(gitApi: GitApi, commandRunner: GitCommandRunner) {
         this.gitApi = gitApi;
+        this.commandRunner = commandRunner;
     }
 
     /**
@@ -32,7 +36,7 @@ export class GitRepositoryService {
         }
 
         const exports = gitExtension.isActive ? gitExtension.exports : await gitExtension.activate();
-        return new GitRepositoryService(exports.getAPI(1) as GitApi);
+        return new GitRepositoryService(exports.getAPI(1) as GitApi, new GitCommandRunner());
     }
 
     /**
@@ -78,14 +82,15 @@ export class GitRepositoryService {
     }
 
     /**
-     * Commits the repository's currently staged changes with the given message.
+     * Commits the repository's currently staged changes with the given message, by running `git
+     * commit` directly rather than through the `vscode.git` extension's own commit machinery.
      *
      * @param {GitApiRepository} repository - The repository to commit in.
      * @param {string} message - The commit message.
      * @returns {Promise<void>} A promise that resolves once the commit has been created.
      */
     public async commit(repository: GitApiRepository, message: string): Promise<void> {
-        await repository.commit(message);
+        await this.commandRunner.commit(repository.rootUri.fsPath, message);
     }
 
     /**
