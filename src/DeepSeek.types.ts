@@ -13,11 +13,35 @@ export interface DeepSeekMessage {
  * @property {string} diff - The staged git diff to summarize into a commit message.
  * @property {string} language - The language the commit message should be written in.
  * @property {'conventional'|'freeform'} commitConvention - Whether to enforce Conventional Commits formatting.
+ * @property {string} customInstructions - Extra user-provided style instructions for the AI, if any.
  */
 export interface GenerateCommitMessageOptions {
     diff: string;
     language: string;
     commitConvention: 'conventional' | 'freeform';
+    customInstructions: string;
+}
+
+/**
+ * Token usage reported by the DeepSeek API for a single request.
+ * @property {number} promptTokens - Tokens consumed by the prompt (diff + instructions).
+ * @property {number} completionTokens - Tokens consumed by the generated commit message.
+ * @property {number} totalTokens - Total tokens billed for the request.
+ */
+export interface DeepSeekUsage {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+}
+
+/**
+ * The result of generating a commit message: the text itself plus the token usage it cost.
+ * @property {string} message - The generated commit message.
+ * @property {DeepSeekUsage} usage - The token usage reported by the API for this request.
+ */
+export interface GenerateCommitMessageResult {
+    message: string;
+    usage: DeepSeekUsage;
 }
 
 /**
@@ -32,9 +56,23 @@ export interface DeepSeekChatChoice {
 }
 
 /**
+ * The raw token usage block returned by the DeepSeek chat completions API.
+ * @property {number} prompt_tokens - Tokens consumed by the prompt.
+ * @property {number} completion_tokens - Tokens consumed by the completion.
+ * @property {number} total_tokens - Total tokens billed for the request.
+ */
+export interface DeepSeekRawUsage {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+}
+
+/**
  * The response payload returned by the DeepSeek chat completions API.
  * @property {DeepSeekChatChoice[]} choices - The list of completion choices returned by the API.
+ * @property {DeepSeekRawUsage} usage - The token usage for this request.
  */
 export interface DeepSeekChatResponse {
     choices: DeepSeekChatChoice[];
+    usage?: DeepSeekRawUsage;
 }

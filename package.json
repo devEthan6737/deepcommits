@@ -30,6 +30,15 @@
             {
                 "command": "deepcommits.clearApiKey",
                 "title": "DeepCommits: Clear Stored API Key"
+            },
+            {
+                "command": "deepcommits.openPanel",
+                "title": "DeepCommits: Open Panel",
+                "icon": "$(sparkle)"
+            },
+            {
+                "command": "deepcommits.generateAndCommit",
+                "title": "DeepCommits: Generate and Commit Instantly"
             }
         ],
         "menus": {
@@ -38,9 +47,21 @@
                     "command": "deepcommits.generateCommitMessage",
                     "when": "scmProvider == git",
                     "group": "navigation"
+                },
+                {
+                    "command": "deepcommits.openPanel",
+                    "when": "scmProvider == git",
+                    "group": "navigation"
                 }
             ]
         },
+        "keybindings": [
+            {
+                "command": "deepcommits.generateAndCommit",
+                "key": "ctrl+alt+m",
+                "mac": "cmd+alt+m"
+            }
+        ],
         "configuration": {
             "title": "DeepCommits",
             "properties": {
@@ -67,6 +88,11 @@
                     ],
                     "default": "conventional",
                     "description": "Whether to enforce Conventional Commits format."
+                },
+                "deepcommits.customInstructions": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Custom style instructions for the AI, applied on top of the commit convention (e.g. 'always mention the affected module in parentheses')."
                 }
             }
         }

@@ -1,6 +1,11 @@
 import * as https from 'https';
-import { DeepSeekApiHost, DeepSeekApiPath, RequestTimeoutMs } from './DeepSeek.constants';
-import type { DeepSeekChatResponse, DeepSeekMessage, GenerateCommitMessageOptions } from './DeepSeek.types';
+import { DeepSeekApiHost, DeepSeekApiPath, MaxDiffLength, RequestTimeoutMs } from './DeepSeek.constants';
+import type {
+    DeepSeekChatResponse,
+    DeepSeekMessage,
+    GenerateCommitMessageOptions,
+    GenerateCommitMessageResult
+} from './DeepSeek.types';
 
 /**
  * Client for the DeepSeek chat completions API, specialized in turning a git diff into a
@@ -23,13 +28,13 @@ export class DeepSeekClient {
      * Generates a commit message summarizing the given diff.
      *
      * @param {GenerateCommitMessageOptions} options - The diff and formatting preferences.
-     * @returns {Promise<string>} A promise that resolves to the generated commit message text.
+     * @returns {Promise<GenerateCommitMessageResult>} A promise that resolves to the generated message and its token usage.
      * @throws {Error} When the DeepSeek API request fails or returns an empty message.
      */
-    public async generateCommitMessage(options: GenerateCommitMessageOptions): Promise<string> {
+    public async generateCommitMessage(options: GenerateCommitMessageOptions): Promise<GenerateCommitMessageResult> {
         const body = JSON.stringify({
             model: this.model,
-            messages: this.buildPrompt(options),
+            messages: this.buildPrompt({ ...options, diff: this.truncateDiff(options.diff) }),
             temperature: 0.2,
             stream: false
         });
@@ -41,7 +46,14 @@ export class DeepSeekClient {
             throw new Error('DeepSeek returned an empty commit message.');
         }
 
-        return this.stripCodeFences(content);
+        return {
+            message: this.stripCodeFences(content),
+            usage: {
+                promptTokens: response.usage?.prompt_tokens ?? 0,
+                completionTokens: response.usage?.completion_tokens ?? 0,
+                totalTokens: response.usage?.total_tokens ?? 0
+            }
+        };
     }
 
     /**
@@ -56,6 +68,10 @@ export class DeepSeekClient {
                 ? 'Follow the Conventional Commits specification (e.g. "feat: ...", "fix: ...", "refactor: ...", "chore: ...").'
                 : 'Write a concise, plain-English summary without a required prefix.';
 
+        const customInstructions = options.customInstructions.trim()
+            ? `\n\nAlso follow these style instructions from the user, on top of the rules above:\n${options.customInstructions.trim()}`
+            : '';
+
         return [
             {
                 role: 'system',
@@ -68,12 +84,27 @@ export class DeepSeekClient {
                 content:
                     `Write a git commit message in "${options.language}" for the following staged diff. ` +
                     `${conventionInstructions} ` +
-                    'Keep the first line under 72 characters. Add a short body only if it adds real value.\n\n' +
-                    '```diff\n' +
+                    'Keep the first line under 72 characters. Add a short body only if it adds real value.' +
+                    customInstructions +
+                    '\n\n```diff\n' +
                     options.diff +
                     '\n```'
             }
         ];
+    }
+
+    /**
+     * Truncates an overly large diff so it stays within a reasonable prompt size for the DeepSeek API.
+     *
+     * @param {string} diff - The full diff text.
+     * @returns {string} The diff, truncated with a notice if it exceeded the maximum length.
+     */
+    private truncateDiff(diff: string): string {
+        if (diff.length <= MaxDiffLength) {
+            return diff;
+        }
+
+        return `${diff.slice(0, MaxDiffLength)}\n\n[diff truncated for length]`;
     }
 
     /**

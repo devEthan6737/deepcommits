@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
+import { CommitPanel } from './CommitPanel';
 import { ConfigService } from './ConfigService';
 import { DeepSeekClient } from './DeepSeekClient';
-import { MaxDiffLength } from './DeepSeek.constants';
 import { GitRepositoryService } from './GitRepositoryService';
 
 /**
@@ -17,7 +17,13 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('deepcommits.generateCommitMessage', () =>
             handleGenerateCommitMessage(configService)
         ),
-        vscode.commands.registerCommand('deepcommits.clearApiKey', () => handleClearApiKey(configService))
+        vscode.commands.registerCommand('deepcommits.clearApiKey', () => handleClearApiKey(configService)),
+        vscode.commands.registerCommand('deepcommits.openPanel', () => {
+            CommitPanel.createOrShow(configService);
+        }),
+        vscode.commands.registerCommand('deepcommits.generateAndCommit', () =>
+            CommitPanel.createOrShow(configService).generateAndCommit()
+        )
     );
 }
 
@@ -62,13 +68,14 @@ async function handleGenerateCommitMessage(configService: ConfigService): Promis
 
                 const settings = configService.getSettings();
                 const deepSeekClient = new DeepSeekClient(apiKey, settings.model);
-                const message = await deepSeekClient.generateCommitMessage({
+                const result = await deepSeekClient.generateCommitMessage({
                     language: settings.language,
                     commitConvention: settings.commitConvention,
-                    diff: truncateDiff(diff)
+                    customInstructions: settings.customInstructions,
+                    diff
                 });
 
-                repository.inputBox.value = message;
+                repository.inputBox.value = result.message;
             } catch (error) {
                 vscode.window.showErrorMessage(`DeepCommits: ${(error as Error).message}`);
             }
@@ -85,18 +92,4 @@ async function handleGenerateCommitMessage(configService: ConfigService): Promis
 async function handleClearApiKey(configService: ConfigService): Promise<void> {
     await configService.clearApiKey();
     vscode.window.showInformationMessage('DeepCommits: stored DeepSeek API key cleared.');
-}
-
-/**
- * Truncates an overly large diff so it stays within a reasonable prompt size for the DeepSeek API.
- *
- * @param {string} diff - The full diff text.
- * @returns {string} The diff, truncated with a notice if it exceeded the maximum length.
- */
-function truncateDiff(diff: string): string {
-    if (diff.length <= MaxDiffLength) {
-        return diff;
-    }
-
-    return `${diff.slice(0, MaxDiffLength)}\n\n[diff truncated for length]`;
 }

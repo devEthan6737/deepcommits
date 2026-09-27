@@ -37,10 +37,13 @@ describe('DeepSeekClient', () => {
         requestMock.mockReset();
     });
 
-    it('returns the generated commit message on a successful response', async () => {
+    it('returns the generated commit message and token usage on a successful response', async () => {
         const { request, response } = createFakeExchange(
             200,
-            JSON.stringify({ choices: [{ message: { content: 'fix: correct off-by-one error' } }] })
+            JSON.stringify({
+                choices: [{ message: { content: 'fix: correct off-by-one error' } }],
+                usage: { prompt_tokens: 120, completion_tokens: 8, total_tokens: 128 }
+            })
         );
 
         requestMock.mockImplementation((_options: unknown, callback: (response: unknown) => void) => {
@@ -50,13 +53,15 @@ describe('DeepSeekClient', () => {
 
         const { DeepSeekClient } = await import('./DeepSeekClient');
         const client = new DeepSeekClient('fake-api-key', 'deepseek-chat');
-        const message = await client.generateCommitMessage({
+        const result = await client.generateCommitMessage({
             diff: 'diff --git a/file.ts b/file.ts',
             language: 'en',
-            commitConvention: 'conventional'
+            commitConvention: 'conventional',
+            customInstructions: ''
         });
 
-        expect(message).toBe('fix: correct off-by-one error');
+        expect(result.message).toBe('fix: correct off-by-one error');
+        expect(result.usage).toEqual({ promptTokens: 120, completionTokens: 8, totalTokens: 128 });
     });
 
     it('rejects when the API responds with a non-2xx status', async () => {
@@ -74,7 +79,8 @@ describe('DeepSeekClient', () => {
             client.generateCommitMessage({
                 diff: 'diff --git a/file.ts b/file.ts',
                 language: 'en',
-                commitConvention: 'conventional'
+                commitConvention: 'conventional',
+                customInstructions: ''
             })
         ).rejects.toThrow(/DeepSeek API request failed \(401\)/);
     });

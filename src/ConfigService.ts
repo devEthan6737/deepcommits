@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import {
     ConfigSection,
     DefaultCommitConvention,
+    DefaultCustomInstructions,
     DefaultLanguage,
     DefaultModel,
     SecretKey
@@ -32,7 +33,8 @@ export class ConfigService {
         return {
             model: config.get<string>('model', DefaultModel),
             language: config.get<string>('language', DefaultLanguage),
-            commitConvention: config.get<'conventional' | 'freeform'>('commitConvention', DefaultCommitConvention)
+            commitConvention: config.get<'conventional' | 'freeform'>('commitConvention', DefaultCommitConvention),
+            customInstructions: config.get<string>('customInstructions', DefaultCustomInstructions)
         };
     }
 

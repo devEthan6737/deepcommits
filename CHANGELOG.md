@@ -12,3 +12,6 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 - Almacenamiento seguro de la API key mediante el secret storage de VS Code.
 - Timeout de 30s en las llamadas a la API de DeepSeek.
 - Icono de la extensión.
+- Panel DeepCommits (Webview) con estilo acorde al tema activo, historial de commits recientes, info del repositorio y tokens consumidos por generación.
+- Comando `DeepCommits: Open Panel` y atajo `Ctrl+Alt+M` / `Cmd+Alt+M` (`DeepCommits: Generate and Commit Instantly`) para generar y commitear en un solo paso.
+- Configuración `deepcommits.customInstructions` para personalizar el estilo de los mensajes generados por la IA.

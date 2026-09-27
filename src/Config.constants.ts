@@ -12,3 +12,6 @@ export const DefaultLanguage = 'en';
 
 /** Default commit message convention. */
 export const DefaultCommitConvention = 'conventional';
+
+/** Default custom instructions for the AI (none). */
+export const DefaultCustomInstructions = '';

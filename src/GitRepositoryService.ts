@@ -1,9 +1,12 @@
 import * as vscode from 'vscode';
-import type { GitApi, GitApiRepository } from './GitRepository.types';
+import type { GitApi, GitApiRepository, GitCommit } from './GitRepository.types';
+
+/** Default number of recent commits shown in the DeepCommits panel. */
+const DefaultLogEntries = 8;
 
 /**
  * Wraps the built-in `vscode.git` extension API to expose the pieces DeepCommits needs: picking
- * the relevant repository and reading its pending diff.
+ * the relevant repository, reading its pending diff, committing, and reading its recent history.
  */
 export class GitRepositoryService {
     private readonly gitApi: GitApi;
@@ -72,5 +75,30 @@ export class GitRepositoryService {
         }
 
         return '';
+    }
+
+    /**
+     * Commits the repository's currently staged changes with the given message.
+     *
+     * @param {GitApiRepository} repository - The repository to commit in.
+     * @param {string} message - The commit message.
+     * @returns {Promise<void>} A promise that resolves once the commit has been created.
+     */
+    public async commit(repository: GitApiRepository, message: string): Promise<void> {
+        await repository.commit(message);
+    }
+
+    /**
+     * Reads the repository's most recent commits.
+     *
+     * @param {GitApiRepository} repository - The repository to read history from.
+     * @returns {Promise<GitCommit[]>} A promise that resolves to the recent commits, newest first.
+     */
+    public async getRecentCommits(repository: GitApiRepository): Promise<GitCommit[]> {
+        try {
+            return await repository.log({ maxEntries: DefaultLogEntries });
+        } catch {
+            return [];
+        }
     }
 }
