@@ -2,7 +2,7 @@
     "name": "deepcommits",
     "displayName": "DeepCommits",
     "description": "Generate Git commit messages from your staged changes using the DeepSeek API.",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "publisher": "etherener",
     "engines": {
         "vscode": "^1.85.0"

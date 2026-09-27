@@ -2,7 +2,13 @@
 
 Todos los cambios notables de este proyecto se documentan en este archivo.
 
-## [0.1.0] - Unreleased
+## [0.1.1]
+
+### Fixed
+
+- El commit desde el panel ahora se ejecuta con `git commit` vía `child_process`, en lugar de depender de la API interna de la extensión Git integrada de VS Code, que podía fallar por configuración de `git.path`.
+
+## [0.1.0]
 
 ### Added
 
