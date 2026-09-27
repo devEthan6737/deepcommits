@@ -23,15 +23,15 @@ Si no hay cambios en staging, se usa el diff del working tree.
 ## Desarrollo
 
 ```bash
-npm install
-npm run watch
+pnpm install
+pnpm run watch
 ```
 
 Presiona `F5` en VS Code para lanzar una ventana de Extension Development Host con la extensión cargada.
 
 ### Comandos
 
-- `npm run compile`: compila con webpack.
-- `npm run typecheck`: verifica tipos con `tsc --noEmit`.
-- `npm run lint`: corre ESLint sobre `src/`.
-- `npm run package`: build de producción para empaquetar con `vsce`.
+- `pnpm run compile`: compila con webpack.
+- `pnpm run typecheck`: verifica tipos con `tsc --noEmit`.
+- `pnpm run lint`: corre ESLint sobre `src/`.
+- `pnpm run package`: build de producción para empaquetar con `vsce`.
