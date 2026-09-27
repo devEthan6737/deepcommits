@@ -7,8 +7,17 @@ export const DeepSeekApiPath = '/chat/completions';
 /** Default DeepSeek model used when none is configured. */
 export const DefaultModel = 'deepseek-chat';
 
-/** Maximum number of diff characters sent to the DeepSeek API in a single request. */
-export const MaxDiffLength = 12000;
+/**
+ * Maximum number of diff characters sent to the DeepSeek API in a single request. Kept small
+ * (roughly 500-600 prompt tokens) to keep the cost of each commit message generation low.
+ */
+export const MaxDiffLength = 2000;
+
+/** Maximum number of custom instruction characters included in the prompt. */
+export const MaxCustomInstructionsLength = 200;
+
+/** Maximum number of tokens the model may generate for a commit message. */
+export const MaxCompletionTokens = 120;
 
 /** Maximum time, in milliseconds, to wait for a DeepSeek API response before failing. */
 export const RequestTimeoutMs = 30000;

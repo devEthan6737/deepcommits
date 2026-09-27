@@ -92,7 +92,7 @@
                 "deepcommits.customInstructions": {
                     "type": "string",
                     "default": "",
-                    "description": "Custom style instructions for the AI, applied on top of the commit convention (e.g. 'always mention the affected module in parentheses')."
+                    "description": "Custom style instructions for the AI, applied on top of the commit convention (e.g. 'always mention the affected module in parentheses'). Capped at 200 characters to keep token usage low."
                 }
             }
         }

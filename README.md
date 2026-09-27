@@ -37,7 +37,18 @@ Para resetear la API key guardada, ejecuta el comando **DeepCommits: Clear Store
 | `deepcommits.model` | Modelo de DeepSeek a usar. | `deepseek-chat` |
 | `deepcommits.language` | Idioma del mensaje generado. | `en` |
 | `deepcommits.commitConvention` | `conventional` para forzar el formato de Conventional Commits, o `freeform`. | `conventional` |
-| `deepcommits.customInstructions` | Instrucciones de estilo propias para la IA (p. ej. "menciona siempre el módulo afectado entre paréntesis"), aplicadas junto a `commitConvention`. | `""` |
+| `deepcommits.customInstructions` | Instrucciones de estilo propias para la IA (p. ej. "menciona siempre el módulo afectado entre paréntesis"), aplicadas junto a `commitConvention`. Se recorta a 200 caracteres. | `""` |
+
+## Consumo de tokens
+
+DeepCommits está optimizado para que cada generación consuma **poco menos de 900 tokens como máximo** (siendo permisivos):
+
+- El diff enviado se recorta a 2000 caracteres (~500-600 tokens en el peor caso).
+- El prompt del sistema y las instrucciones son deliberadamente cortos.
+- Las instrucciones personalizadas se limitan a 200 caracteres.
+- La respuesta del modelo está limitada a 120 tokens (`max_tokens`), suficiente para un mensaje de commit con cuerpo corto.
+
+Si tu diff es enorme, el mensaje se genera igual, pero solo a partir de los primeros ~2000 caracteres del diff (se añade una nota `[diff truncated for length]`).
 
 ## Desarrollo
 

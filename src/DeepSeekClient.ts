@@ -1,5 +1,12 @@
 import * as https from 'https';
-import { DeepSeekApiHost, DeepSeekApiPath, MaxDiffLength, RequestTimeoutMs } from './DeepSeek.constants';
+import {
+    DeepSeekApiHost,
+    DeepSeekApiPath,
+    MaxCompletionTokens,
+    MaxCustomInstructionsLength,
+    MaxDiffLength,
+    RequestTimeoutMs
+} from './DeepSeek.constants';
 import type {
     DeepSeekChatResponse,
     DeepSeekMessage,
@@ -36,6 +43,7 @@ export class DeepSeekClient {
             model: this.model,
             messages: this.buildPrompt({ ...options, diff: this.truncateDiff(options.diff) }),
             temperature: 0.2,
+            max_tokens: MaxCompletionTokens,
             stream: false
         });
 
@@ -65,32 +73,38 @@ export class DeepSeekClient {
     private buildPrompt(options: GenerateCommitMessageOptions): DeepSeekMessage[] {
         const conventionInstructions =
             options.commitConvention === 'conventional'
-                ? 'Follow the Conventional Commits specification (e.g. "feat: ...", "fix: ...", "refactor: ...", "chore: ...").'
-                : 'Write a concise, plain-English summary without a required prefix.';
+                ? 'Use Conventional Commits (feat/fix/refactor/chore).'
+                : 'Plain summary, no required prefix.';
 
-        const customInstructions = options.customInstructions.trim()
-            ? `\n\nAlso follow these style instructions from the user, on top of the rules above:\n${options.customInstructions.trim()}`
-            : '';
+        const customInstructions = this.truncateCustomInstructions(options.customInstructions);
+        const styleNote = customInstructions ? ` Also: ${customInstructions}` : '';
 
         return [
             {
                 role: 'system',
-                content:
-                    'You are a senior software engineer who writes clear, precise git commit messages. ' +
-                    'You only output the commit message itself, with no extra commentary, quotes, or markdown fences.'
+                content: 'Senior engineer writing git commit messages. Output only the message, nothing else.'
             },
             {
                 role: 'user',
                 content:
-                    `Write a git commit message in "${options.language}" for the following staged diff. ` +
-                    `${conventionInstructions} ` +
-                    'Keep the first line under 72 characters. Add a short body only if it adds real value.' +
-                    customInstructions +
-                    '\n\n```diff\n' +
-                    options.diff +
-                    '\n```'
+                    `Language: ${options.language}. ${conventionInstructions} ` +
+                    `First line under 72 chars, no body unless essential.${styleNote}\n\n` +
+                    options.diff
             }
         ];
+    }
+
+    /**
+     * Truncates the user's custom style instructions so they cannot blow up the prompt size.
+     *
+     * @param {string} customInstructions - The raw custom instructions from settings.
+     * @returns {string} The trimmed, length-capped instructions, or an empty string if none were given.
+     */
+    private truncateCustomInstructions(customInstructions: string): string {
+        const trimmed = customInstructions.trim();
+        return trimmed.length > MaxCustomInstructionsLength
+            ? trimmed.slice(0, MaxCustomInstructionsLength)
+            : trimmed;
     }
 
     /**

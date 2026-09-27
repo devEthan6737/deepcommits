@@ -15,3 +15,7 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 - Panel DeepCommits (Webview) con estilo acorde al tema activo, historial de commits recientes, info del repositorio y tokens consumidos por generación.
 - Comando `DeepCommits: Open Panel` y atajo `Ctrl+Alt+M` / `Cmd+Alt+M` (`DeepCommits: Generate and Commit Instantly`) para generar y commitear en un solo paso.
 - Configuración `deepcommits.customInstructions` para personalizar el estilo de los mensajes generados por la IA.
+
+### Changed
+
+- Reducido drásticamente el consumo de tokens por generación (diff limitado a 2000 caracteres, `max_tokens` de 120, prompt más corto e instrucciones personalizadas limitadas a 200 caracteres), apuntando a un tope de ~900 tokens por commit.
