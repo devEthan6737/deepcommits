@@ -2,7 +2,7 @@
     "name": "deepcommits",
     "displayName": "DeepCommits",
     "description": "Generate Git commit messages from your staged changes using the DeepSeek API.",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "publisher": "etherener",
     "engines": {
         "vscode": "^1.85.0"
@@ -107,7 +107,7 @@
                 "deepcommits.splitCommitsByDirectory": {
                     "type": "boolean",
                     "default": false,
-                    "description": "When enabled (and deepcommits.autoCommit is on), changed files are grouped by their top-level directory and committed as one commit per group instead of a single combined commit."
+                    "description": "When enabled, 'Generate and Commit Instantly' groups changed files by their top-level directory and commits one group at a time instead of a single combined commit. Implies running headless, like deepcommits.autoCommit."
                 }
             }
         }

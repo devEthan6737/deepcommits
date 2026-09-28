@@ -25,7 +25,7 @@ Genera mensajes de commit de Git a partir de tus cambios en staging, usando la A
 
 - `deepcommits.confirmBeforeCommit` (activado por defecto): antes de commitear, muestra un diálogo con el mensaje generado para aceptarlo o cancelarlo.
 - `deepcommits.autoCommit`: si lo activas, este atajo deja de abrir el panel — genera, commitea y muestra una notificación con el mensaje (o mensajes) confirmados, sin ninguna ventana de por medio.
-- `deepcommits.splitCommitsByDirectory` (requiere `autoCommit`): en vez de un único commit con todo lo editado, agrupa los archivos cambiados por su carpeta de primer nivel y genera un commit independiente por grupo (p. ej. tocar `src/config/` y `src/git/` produce dos commits).
+- `deepcommits.splitCommitsByDirectory`: en vez de un único commit con todo lo editado, agrupa los archivos cambiados por su carpeta de primer nivel y genera un commit independiente por grupo (p. ej. tocar `src/config/` y `src/git/` produce dos commits). Al activarlo, este atajo corre siempre en modo headless (como `autoCommit`), porque dividir en varios commits no tiene una UI sensata en el panel de una sola caja de texto.
 
 Para olvidar la API key guardada: **DeepCommits: Clear Stored API Key**.
 
