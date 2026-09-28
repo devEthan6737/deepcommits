@@ -92,13 +92,16 @@ async function handleGenerateCommitMessage(configService: ConfigService): Promis
 
 /**
  * Runs the "generate and commit" flow: headlessly via {@link AutoCommitService} when
- * `deepcommits.autoCommit` is enabled, or by opening the panel otherwise.
+ * `deepcommits.autoCommit` is enabled, or when `deepcommits.splitCommitsByDirectory` is enabled
+ * (splitting into several commits has no sensible single-textarea panel UI, so it always runs
+ * headless); otherwise by opening the panel as usual.
  *
  * @param {ConfigService} configService - Resolves DeepCommits settings and the DeepSeek API key.
  * @returns {Promise<void>} A promise that resolves once the flow has finished.
  */
 async function handleGenerateAndCommit(configService: ConfigService): Promise<void> {
-    if (configService.getSettings().autoCommit) {
+    const settings = configService.getSettings();
+    if (settings.autoCommit || settings.splitCommitsByDirectory) {
         await new AutoCommitService(configService).run();
         return;
     }
