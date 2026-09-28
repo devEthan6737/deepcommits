@@ -2,7 +2,7 @@
     "name": "deepcommits",
     "displayName": "DeepCommits",
     "description": "Generate Git commit messages from your staged changes using the DeepSeek API.",
-    "version": "0.1.3",
+    "version": "1.0.0",
     "publisher": "etherener",
     "engines": {
         "vscode": "^1.85.0"
@@ -93,6 +93,21 @@
                     "type": "string",
                     "default": "",
                     "description": "Custom style instructions for the AI, applied on top of the commit convention (e.g. 'always mention the affected module in parentheses'). Capped at 200 characters to keep token usage low."
+                },
+                "deepcommits.confirmBeforeCommit": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Ask for confirmation, showing the generated message, before running 'Generate and Commit Instantly'."
+                },
+                "deepcommits.autoCommit": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When enabled, 'Generate and Commit Instantly' runs without opening the panel: it generates, commits, and shows a notification with the resulting commit message(s)."
+                },
+                "deepcommits.splitCommitsByDirectory": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When enabled (and deepcommits.autoCommit is on), changed files are grouped by their top-level directory and committed as one commit per group instead of a single combined commit."
                 }
             }
         }

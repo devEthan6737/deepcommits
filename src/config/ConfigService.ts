@@ -1,10 +1,13 @@
 import * as vscode from 'vscode';
 import {
     ConfigSection,
+    DefaultAutoCommit,
     DefaultCommitConvention,
+    DefaultConfirmBeforeCommit,
     DefaultCustomInstructions,
     DefaultLanguage,
     DefaultModel,
+    DefaultSplitCommitsByDirectory,
     SecretKey
 } from './Config.constants';
 import { ConfigKeyEnum } from './Config.types';
@@ -35,7 +38,10 @@ export class ConfigService {
             model: config.get<string>(ConfigKeyEnum.Model, DefaultModel),
             language: config.get<string>(ConfigKeyEnum.Language, DefaultLanguage),
             commitConvention: config.get<DeepCommitsSettingsEnum>(ConfigKeyEnum.CommitConvention, DefaultCommitConvention),
-            customInstructions: config.get<string>(ConfigKeyEnum.CustomInstructions, DefaultCustomInstructions)
+            customInstructions: config.get<string>(ConfigKeyEnum.CustomInstructions, DefaultCustomInstructions),
+            confirmBeforeCommit: config.get<boolean>(ConfigKeyEnum.ConfirmBeforeCommit, DefaultConfirmBeforeCommit),
+            autoCommit: config.get<boolean>(ConfigKeyEnum.AutoCommit, DefaultAutoCommit),
+            splitCommitsByDirectory: config.get<boolean>(ConfigKeyEnum.SplitCommitsByDirectory, DefaultSplitCommitsByDirectory)
         };
     }
 
@@ -48,19 +54,14 @@ export class ConfigService {
      */
     public async resolveApiKey(): Promise<string | undefined> {
         const settingsKey = this.getConfiguration().get<string>(ConfigKeyEnum.ApiKey, '').trim();
-        if (settingsKey) {
-            return settingsKey;
-        }
+
+        if (settingsKey) return settingsKey;
 
         const storedKey = await this.context.secrets.get(SecretKey);
-        if (storedKey) {
-            return storedKey;
-        }
+        if (storedKey) return storedKey;
 
         const enteredKey = await this.promptForApiKey();
-        if (!enteredKey) {
-            return undefined;
-        }
+        if (!enteredKey) return undefined;
 
         await this.context.secrets.store(SecretKey, enteredKey);
         return enteredKey;

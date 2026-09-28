@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { AutoCommitService } from './commit/AutoCommitService';
 import { CommitPanel } from './panel/CommitPanel';
 import { ConfigService } from './config/ConfigService';
 import { DeepSeekClient } from './deepseek/DeepSeekClient';
@@ -29,9 +30,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand(CommandEnum.OpenPanel, () => {
             CommitPanel.createOrShow(configService);
         }),
-        vscode.commands.registerCommand(CommandEnum.GenerateAndCommit, () =>
-            CommitPanel.createOrShow(configService).generateAndCommit()
-        )
+        vscode.commands.registerCommand(CommandEnum.GenerateAndCommit, () => handleGenerateAndCommit(configService))
     );
 }
 
@@ -89,6 +88,22 @@ async function handleGenerateCommitMessage(configService: ConfigService): Promis
             }
         }
     );
+}
+
+/**
+ * Runs the "generate and commit" flow: headlessly via {@link AutoCommitService} when
+ * `deepcommits.autoCommit` is enabled, or by opening the panel otherwise.
+ *
+ * @param {ConfigService} configService - Resolves DeepCommits settings and the DeepSeek API key.
+ * @returns {Promise<void>} A promise that resolves once the flow has finished.
+ */
+async function handleGenerateAndCommit(configService: ConfigService): Promise<void> {
+    if (configService.getSettings().autoCommit) {
+        await new AutoCommitService(configService).run();
+        return;
+    }
+
+    await CommitPanel.createOrShow(configService).generateAndCommit();
 }
 
 /**

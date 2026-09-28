@@ -15,6 +15,26 @@ export interface GitCommit {
 }
 
 /**
+ * A single pending change (staged or in the working tree) as reported by the built-in `vscode.git`
+ * extension API.
+ * @property {vscode.Uri} uri - The location of the changed file.
+ */
+export interface GitChange {
+    uri: vscode.Uri;
+}
+
+/**
+ * A set of changed files that belong to the same top-level directory, treated as one commit's worth
+ * of work by the split-commits flow.
+ * @property {string} directory - The top-level directory the files belong to, relative to the repository root.
+ * @property {string[]} paths - The repository-relative paths of the changed files in this group.
+ */
+export interface ChangedFileGroup {
+    directory: string;
+    paths: string[];
+}
+
+/**
  * Minimal shape of the repository object exposed by the built-in `vscode.git` extension API
  * that DeepCommits relies on.
  * @property {vscode.Uri} rootUri - The filesystem root of the repository.
@@ -26,8 +46,8 @@ export interface GitCommit {
 export interface GitApiRepository {
     rootUri: vscode.Uri;
     state: {
-        indexChanges: unknown[];
-        workingTreeChanges: unknown[];
+        indexChanges: GitChange[];
+        workingTreeChanges: GitChange[];
         HEAD?: {
             name?: string;
         };

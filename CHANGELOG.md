@@ -2,6 +2,18 @@
 
 Todos los cambios notables de este proyecto se documentan en este archivo.
 
+## [1.0.0]
+
+### Added
+
+- `deepcommits.confirmBeforeCommit` (activado por defecto): pide confirmación, mostrando el mensaje generado, antes de commitear con "Generate and Commit Instantly".
+- `deepcommits.autoCommit`: hace que "Generate and Commit Instantly" corra sin abrir el panel — genera, commitea y notifica el resultado directamente.
+- `deepcommits.splitCommitsByDirectory`: con `autoCommit` activo, agrupa los archivos cambiados por su carpeta de primer nivel y crea un commit independiente por grupo en lugar de uno solo con todo lo editado.
+
+### Changed
+
+- `GitRepositoryService.commit` y `GitCommandRunner` ahora escriben commits acotados por pathspec (`git add -- <paths>` + `git commit -- <paths>`) en lugar de `git commit --all`, permitiendo confirmar solo un subconjunto de archivos sin tocar el resto de lo pendiente.
+
 ## [0.1.3]
 
 ### Fixed

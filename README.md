@@ -21,7 +21,11 @@ Genera mensajes de commit de Git a partir de tus cambios en staging, usando la A
 
 ### Generar y commitear al instante
 
-`Ctrl+Alt+M` (`Cmd+Alt+M` en macOS) genera el mensaje desde el diff en staging y commitea de inmediato, sin pasos intermedios.
+`Ctrl+Alt+M` (`Cmd+Alt+M` en macOS) genera el mensaje desde el diff en staging y commitea de inmediato. Su comportamiento depende de tres settings:
+
+- `deepcommits.confirmBeforeCommit` (activado por defecto): antes de commitear, muestra un diálogo con el mensaje generado para aceptarlo o cancelarlo.
+- `deepcommits.autoCommit`: si lo activas, este atajo deja de abrir el panel — genera, commitea y muestra una notificación con el mensaje (o mensajes) confirmados, sin ninguna ventana de por medio.
+- `deepcommits.splitCommitsByDirectory` (requiere `autoCommit`): en vez de un único commit con todo lo editado, agrupa los archivos cambiados por su carpeta de primer nivel y genera un commit independiente por grupo (p. ej. tocar `src/config/` y `src/git/` produce dos commits).
 
 Para olvidar la API key guardada: **DeepCommits: Clear Stored API Key**.
 
@@ -43,6 +47,9 @@ Para olvidar la API key guardada: **DeepCommits: Clear Stored API Key**.
 | `deepcommits.language` | Idioma del mensaje generado. | `en` |
 | `deepcommits.commitConvention` | `conventional` para forzar Conventional Commits, o `freeform`. | `conventional` |
 | `deepcommits.customInstructions` | Instrucciones de estilo propias para la IA, aplicadas junto a `commitConvention`. Se recorta a 200 caracteres. | `""` |
+| `deepcommits.confirmBeforeCommit` | Pide confirmación, mostrando el mensaje generado, antes de commitear con "Generate and Commit Instantly". | `true` |
+| `deepcommits.autoCommit` | "Generate and Commit Instantly" no abre el panel: genera, commitea y notifica el resultado directamente. | `false` |
+| `deepcommits.splitCommitsByDirectory` | Con `autoCommit` activo, agrupa los cambios por carpeta de primer nivel y hace un commit por grupo en vez de uno solo. | `false` |
 
 ## Consumo de tokens
 

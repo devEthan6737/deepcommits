@@ -3,6 +3,7 @@ import { ConfigService } from '../config/ConfigService';
 import { DeepSeekClient } from '../deepseek/DeepSeekClient';
 import { GitRepositoryService } from '../git/GitRepositoryService';
 import type { GitApiRepository, GitCommit } from '../git/GitRepository.types';
+import { ConfirmActionEnum } from '../commit/Commit.types';
 import commitPanelHtml from './CommitPanel.html';
 
 enum InboundMessageEnum {
@@ -96,14 +97,34 @@ export class CommitPanel {
 
     /**
      * Generates a commit message from the current diff and immediately commits it, for use by the
-     * "generate and commit" keyboard shortcut.
+     * "generate and commit" keyboard shortcut. When `deepcommits.confirmBeforeCommit` is enabled, asks
+     * for confirmation first.
      *
      * @returns {Promise<void>} A promise that resolves once the commit attempt has finished.
      */
     public async generateAndCommit(): Promise<void> {
         const message = await this.generate();
+        if (!message) return;
 
-        if (message) await this.commitMessage(message);
+        if (this.configService.getSettings().confirmBeforeCommit && !(await this.confirmCommit(message))) return;
+
+        await this.commitMessage(message);
+    }
+
+    /**
+     * Asks the user to confirm a generated commit message before it is used to commit.
+     *
+     * @param {string} message - The generated commit message to show.
+     * @returns {Promise<boolean>} A promise that resolves to true if the user accepted the commit.
+     */
+    private async confirmCommit(message: string): Promise<boolean> {
+        const choice = await vscode.window.showWarningMessage(
+            'DeepCommits: commit with this message?',
+            { modal: true, detail: message },
+            ConfirmActionEnum.Commit
+        );
+
+        return choice === ConfirmActionEnum.Commit;
     }
 
     /**

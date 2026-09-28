@@ -3,13 +3,15 @@ export enum GitExtensionEnum {
     Id = 'vscode.git'
 }
 
-/** The `git` CLI binary and the subcommand/flags DeepCommits invokes on it directly. */
+/** The `git` CLI binary and the subcommands/flags DeepCommits invokes on it directly. */
 export enum GitCliEnum {
     Binary = 'git',
     CommitSubcommand = 'commit',
+    AddSubcommand = 'add',
+    DiffSubcommand = 'diff',
     MessageFlag = '-m',
-    /** Stages all tracked, modified files before committing (`git commit --all`). */
-    AllFlag = '--all'
+    CachedFlag = '--cached',
+    PathsSeparator = '--'
 }
 
 /** Default number of recent commits shown in the DeepCommits panel. */

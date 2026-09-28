@@ -17,3 +17,12 @@ export const DefaultCommitConvention = DeepCommitsSettingsEnum.Conventional;
 
 /** Default custom instructions for the AI (none). */
 export const DefaultCustomInstructions = '';
+
+/** Whether a confirmation is required before committing a generated message, by default. */
+export const DefaultConfirmBeforeCommit = true;
+
+/** Whether "Generate and Commit Instantly" runs headless by default. */
+export const DefaultAutoCommit = false;
+
+/** Whether the headless auto-commit flow splits commits by directory by default. */
+export const DefaultSplitCommitsByDirectory = false;
