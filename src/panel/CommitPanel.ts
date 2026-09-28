@@ -216,14 +216,13 @@ export class CommitPanel {
      * Builds the repository summary shown at the top of the panel.
      *
      * @param {GitApiRepository} repository - The repository to describe.
-     * @returns {{ name: string; branch: string; stagedCount: number; changedCount: number }} A plain summary object.
+     * @returns {{ name: string; branch: string; stagedCount: number }} A plain summary object.
      */
     private describeRepository(repository: GitApiRepository) {
         return {
             name: repository.rootUri.path.split('/').filter(Boolean).pop() ?? repository.rootUri.path,
             branch: repository.state.HEAD?.name ?? 'detached',
-            stagedCount: repository.state.indexChanges.length,
-            changedCount: repository.state.workingTreeChanges.length
+            stagedCount: repository.state.indexChanges.length
         };
     }
 
@@ -231,13 +230,12 @@ export class CommitPanel {
      * Builds the plain object sent to the webview for a single commit entry.
      *
      * @param {GitCommit} commit - The commit to describe.
-     * @returns {{ hash: string; message: string; authorName: string; date: string }} A plain summary object.
+     * @returns {{ hash: string; message: string; date: string }} A plain summary object.
      */
     private describeCommit(commit: GitCommit) {
         return {
             hash: commit.hash.slice(0, 7),
             message: commit.message.split('\n')[0],
-            authorName: commit.authorName ?? '',
             date: commit.commitDate ? new Date(commit.commitDate).toLocaleString() : ''
         };
     }

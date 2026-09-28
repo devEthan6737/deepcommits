@@ -70,15 +70,18 @@ export class GitRepositoryService {
     }
 
     /**
-     * Commits the repository's currently staged changes with the given message, by running `git
-     * commit` directly rather than through the `vscode.git` extension's own commit machinery.
+     * Commits the repository's changes with the given message, by running `git commit` directly
+     * rather than through the `vscode.git` extension's own commit machinery. When nothing is staged,
+     * mirrors {@link getRelevantDiff}'s working tree fallback by staging all tracked, modified files
+     * before committing, so the commit actually captures what the message was generated from.
      *
      * @param {GitApiRepository} repository - The repository to commit in.
      * @param {string} message - The commit message.
      * @returns {Promise<void>} A promise that resolves once the commit has been created.
      */
     public async commit(repository: GitApiRepository, message: string): Promise<void> {
-        await this.commandRunner.commit(repository.rootUri.fsPath, message);
+        const stageAllTracked = repository.state.indexChanges.length === 0;
+        await this.commandRunner.commit(repository.rootUri.fsPath, message, stageAllTracked);
     }
 
     /**

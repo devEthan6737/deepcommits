@@ -7,7 +7,9 @@ export enum GitExtensionEnum {
 export enum GitCliEnum {
     Binary = 'git',
     CommitSubcommand = 'commit',
-    MessageFlag = '-m'
+    MessageFlag = '-m',
+    /** Stages all tracked, modified files before committing (`git commit --all`). */
+    AllFlag = '--all'
 }
 
 /** Default number of recent commits shown in the DeepCommits panel. */

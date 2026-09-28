@@ -2,6 +2,16 @@
 
 Todos los cambios notables de este proyecto se documentan en este archivo.
 
+## [0.1.3]
+
+### Fixed
+
+- El commit ya no fallaba silenciosamente (mostrando el `git status` crudo como error) cuando el mensaje se generaba a partir del diff del working tree sin nada en staging: ahora se hace `git commit --all` en ese caso, para confirmar realmente lo que el mensaje describía.
+
+### Changed
+
+- Rediseñado el panel: la card "Repository" se reemplazó por una barra compacta (nombre + rama + badge de archivos staged), se quitó el conteo de cambios sin stagear y el nombre de autor en el historial de commits, y se afinaron bordes, tipografía y transiciones de botones/textarea.
+
 ## [0.1.2]
 
 ### Fixed
